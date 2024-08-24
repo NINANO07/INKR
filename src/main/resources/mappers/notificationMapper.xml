@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.javaclassS10.dao.NotificationDAO">
+	<select id="getNotification" resultType="com.spring.javaclassS10.vo.NotificationVO">
+		select * from notification where idx =#{idx}
+	</select>
+	
+	<select id="getNotreadMessage" resultType="com.spring.javaclassS10.vo.NotificationVO">
+		select * from notification where section = #{section} and toMid = #{mid} and checked = false order by idx desc
+	</select>
+	
+	<insert id="setNotification" useGeneratedKeys="true" keyProperty="idx">
+		insert into notification values (default, #{vo.section}, #{vo.sort}, #{vo.superIdx}, #{vo.reIdx}, #{vo.toMid}, #{vo.fromMid}, default, default);
+	</insert>
+	
+	<update id="updateStatus">
+		update notification set checked = true where toMid =#{mid} and section =#{section}
+	</update>
+	
+</mapper>

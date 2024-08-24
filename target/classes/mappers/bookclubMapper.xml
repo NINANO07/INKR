@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.javaclassS10.dao.BookclubDAO">
+
+	<select id="getBookclubList" resultType="com.spring.javaclassS10.vo.BookclubVO">
+		select * from bookclub order by idx desc;
+	</select>
+	
+	<select id="getIsbnInfo" resultType="com.spring.javaclassS10.vo.BookclubVO">
+		select * from bookclub where isbn = #{isbn};
+	</select>
+	
+	<select id="getBookclubListbyidx" resultType="com.spring.javaclassS10.vo.BookclubVO">
+		select * from bookclub where idx = #{idx};
+	</select>
+	
+	<select id="getBookclubJoin" resultType="com.spring.javaclassS10.vo.BookclubVO">
+		<if test="member == 'yes'">
+		select * from bookclub where idx in (select clubIdx from bookclubMember where mid = #{mid} and baned = 0)
+		</if>
+		<if test="member == 'my'">
+		select * from bookclub where idx in (select clubIdx from bookclubMember where mid = #{mid}) and host = #{mid};
+		</if>
+		<if test="member == 'marked'">
+		select * from bookclub where idx in (select clubIdx from bookclubMarked where mid = #{mid})
+		</if>
+		<if test="member == 'no'">
+		select * from bookclub where idx NOT in (select clubIdx from bookclubMember m where m.mid = #{mid}) order by idx desc;
+		</if>
+		<if test="member == 'sce'">
+		select * from bookclub where idx NOT in (select clubIdx from bookclubMember m where m.mid = #{mid}) order by title;
+		</if>
+		<if test="member == 'dsce'">
+		select * from bookclub where idx NOT in (select clubIdx from bookclubMember m where m.mid = #{mid}) order by title desc;
+		</if>
+	</select>
+	
+	<select id="getBookclubSearch" resultType="com.spring.javaclassS10.vo.BookclubVO">
+		<if test="select == 'title'">
+		select * from bookclub where idx NOT in (select clubIdx from bookclubMember where mid = #{mid}) and title like concat('%',#{searchStr},'%') or engTitle like concat('%',#{searchStr},'%')
+		</if>
+		<if test="select == 'author'">
+		select * from bookclub where idx NOT in (select clubIdx from bookclubMember where mid = #{mid}) and author like concat('%',#{searchStr},'%') or engAuthor like concat('%',#{searchStr},'%')
+		</if>
+		<if test="select == 'isbn'">
+		select * from bookclub where idx NOT in (select clubIdx from bookclubMember where mid = #{mid}) and isbn like concat('%',#{searchStr},'%')
+		</if>
+	</select>
+	
+	<select id="getQnAList" resultType="com.spring.javaclassS10.vo.BookclubQVO">
+		SELECT q.*, datediff(q.qdate, now()) as date_diff, timestampdiff(hour, q.qdate, now()) as hour_diff, m.photo, m.levelB, (SELECT COUNT(*) FROM bookclubA a WHERE a.qidx = q.idx and a.mid NOT IN (SELECT b.toMid FROM memberBlock b where b.mid = #{mid})) AS replyCnt FROM bookclubQ q JOIN member2 m ON q.mid = m.mid WHERE q.mid NOT IN (SELECT b.toMid FROM memberBlock b where b.mid = #{mid}) AND q.clubIdx = #{idx} order by q.top desc, q.idx desc 
+	</select>
+	
+	<select id="getQnASearch" resultType="com.spring.javaclassS10.vo.BookclubQVO">
+		<if test="searchStr !=''">
+		SELECT q.*,datediff(q.qdate, now()) as date_diff, timestampdiff(hour, q.qdate, now()) as hour_diff, m.photo, m.levelB, (SELECT COUNT(*) FROM bookclubA a WHERE a.qidx = q.idx and a.mid NOT IN (SELECT b.toMid FROM memberBlock b where b.mid = #{mid})) AS replyCnt FROM bookclubQ q JOIN member2 m ON q.mid = m.mid WHERE q.mid NOT IN (SELECT b.toMid FROM memberBlock b where b.mid = #{mid}) AND q.clubIdx = #{idx} AND q.language=#{lang} AND q.content like concat('%',#{searchStr},'%') order by q.idx desc
+		</if>
+		<if test="searchStr ==''">
+		SELECT q.*, datediff(q.qdate, now()) as date_diff, timestampdiff(hour, q.qdate, now()) as hour_diff, m.photo, m.levelB, (SELECT COUNT(*) FROM bookclubA a WHERE a.qidx = q.idx and a.mid NOT IN (SELECT b.toMid FROM memberBlock b where b.mid = #{mid})) AS replyCnt FROM bookclubQ q JOIN member2 m ON q.mid = m.mid WHERE q.mid NOT IN (SELECT b.toMid FROM memberBlock b where b.mid = #{mid}) AND q.clubIdx = #{idx} AND q.language=#{lang} order by q.idx desc
+		</if>
+	
+	</select>
+	
+	<select id="getBookclubQListbyidx" resultType="com.spring.javaclassS10.vo.BookclubQVO">
+		SELECT q.*,datediff(q.qdate, now()) as date_diff, timestampdiff(hour, q.qdate, now()) as hour_diff, m.photo, m.levelB FROM bookclubQ q JOIN member2 m ON q.mid = m.mid WHERE q.idx = #{idx} 
+	</select>
+	
+	<select id="getBookclubAListbyidx" resultType="com.spring.javaclassS10.vo.BookclubAVO">
+		SELECT a.*, datediff(a.adate, now()) as date_diff, timestampdiff(hour, a.adate, now()) as hour_diff, m.photo, m.levelB  FROM bookclubA a JOIN member2 m ON a.mid = m.mid WHERE a.mid NOT IN (SELECT b.toMid FROM memberBlock b where b.mid = #{mid}) and a.qidx = #{qidx} order by isFeatured desc, idx;
+	</select>
+	
+	<select id="getBookclubAHitLike" resultType="int">
+		SELECT COUNT(*) FROM bookclubLike WHERE aidx = #{aidx} and mid = #{mid}
+	</select>
+	
+	<select id="getBookclubMarked" resultType="int">
+		SELECT COUNT(*) FROM bookclubMarked WHERE clubIdx = #{clubIdx} and mid = #{mid}
+	</select>
+	
+	<select id="getVocaMarked" resultType="int">
+		SELECT COUNT(*) FROM vocaBookMark WHERE vocaIdx = #{vocaIdx} and mid = #{mid}
+	</select>
+	
+	<select id="getVocaList" resultType="int">
+		SELECT COUNT(*) FROM bookclubVoca WHERE clubIdx = #{clubIdx} and word = #{word} and language = #{language}
+	</select>
+	
+	<select id="getAllVocaList" resultType="com.spring.javaclassS10.vo.BookclubVocaVO">
+		SELECT * FROM bookclubVoca WHERE clubIdx = #{clubIdx} and language = #{language}
+	</select>
+	
+	<select id="bookclubGetMember" resultType="com.spring.javaclassS10.vo.BookclubMemberVO">
+		SELECT m.*, p.firstName, p.photo, p.levelB, (SELECT COUNT(*) FROM bookclubA a WHERE a.clubIdx = #{idx} and a.mid  = m.mid and a.isFeatured = true) AS featuredCnt, (SELECT COUNT(*) FROM bookclubA a WHERE a.clubIdx = #{idx} and a.mid  = m.mid) AS answeredCnt, (SELECT COUNT(*) FROM bookclubLike l join bookclubA a on l.aidx = a.idx WHERE a.clubIdx = #{idx} and l.toMid  = m.mid) AS likedCnt, (SELECT COUNT(*) FROM bookclubQ q WHERE q.clubIdx = #{idx} and q.mid  = m.mid) AS postedCnt FROM bookclubMember m JOIN member2 p ON m.mid = p.mid WHERE m.clubIdx = #{idx} and m.baned = 0 
+	</select>
+	
+	<select id="getBestMember" resultType="com.spring.javaclassS10.vo.BookclubMemberVO">
+		SELECT m.*, p.firstName, p.photo, p.levelB FROM bookclubMember m JOIN member2 p ON m.mid = p.mid WHERE m.clubIdx = #{idx} and m.baned = 0 order by clubPoint desc limit 1
+	</select>
+	
+	<select id="bookclubBanMember" resultType="com.spring.javaclassS10.vo.BookclubMemberVO">
+		SELECT m.*, p.firstName, p.photo, p.levelB, (SELECT COUNT(*) FROM bookclubA a WHERE a.clubIdx = #{idx} and a.mid  = m.mid and a.isFeatured = true) AS featuredCnt, (SELECT COUNT(*) FROM bookclubA a WHERE a.clubIdx = #{idx} and a.mid  = m.mid) AS answeredCnt, (SELECT COUNT(*) FROM bookclubLike l join bookclubA a on l.aidx = a.idx WHERE a.clubIdx = #{idx} and l.toMid  = m.mid) AS likedCnt, (SELECT COUNT(*) FROM bookclubQ q WHERE q.clubIdx = #{idx} and q.mid  = m.mid) AS postedCnt FROM bookclubMember m JOIN member2 p ON m.mid = p.mid WHERE m.clubIdx = #{idx} and m.baned = 1 
+	</select>
+	
+	<select id="getBookclubAFeatured" resultType="com.spring.javaclassS10.vo.BookclubAVO">
+		SELECT idx FROM bookclubA where qidx =#{qidx} and isFeatured = 1;
+	</select>
+	
+	<select id="getSearchVocaList" resultType="com.spring.javaclassS10.vo.BookclubVocaVO">
+		SELECT * FROM bookclubVoca WHERE clubIdx = #{idx} and language = #{lang} and word like concat('%',#{searchInput},'%') or transWord like concat('%',#{searchInput},'%')
+	</select>
+	
+	<select id="getClubMidx" resultType="int">
+		SELECT idx FROM bookclubMember WHERE clubIdx = #{clubIdx} and mid= #{mid}
+	</select>
+	
+	<select id="getClubPoint" resultType="int">
+		SELECT SUM(clubPoint) FROM bookclubMember where mid= #{mid}
+	
+	</select>
+	
+	<select id="getBookclubAnswer" resultType="com.spring.javaclassS10.vo.BookclubAVO">
+		SELECT * FROM bookclubA where idx = #{idx}
+	
+	</select>
+	
+	<select id="getQboardIdx" resultType="int">
+		SELECT qidx from bookclubA where idx = #{aIdx};
+	</select>
+	
+	<select id="getMemberDetail"  resultType="com.spring.javaclassS10.vo.BookclubMemberVO">
+		SELECT
+        (SELECT SUM(clubPoint) FROM bookclubMember WHERE mid = #{mid}) AS clubPoint,
+        (SELECT COUNT(*) FROM bookclub WHERE host = #{mid}) AS hostCnt,
+        (SELECT COUNT(*) FROM bookclubMember WHERE mid = #{mid} AND baned = 0) AS joinCnt,
+        (SELECT COUNT(*) FROM bookclubLike WHERE toMid = #{mid}) AS likedCnt
+	</select>
+	
+	<select id="getReportALL" resultType="com.spring.javaclassS10.vo.BookclubReportVO">
+		select * from bookclubReport
+	</select>
+	
+	<select id="isBookClubMember" resultType="com.spring.javaclassS10.vo.BookclubMemberVO">
+		select * from bookclubMember where mid=#{mid} and clubIdx=#{idx} and baned = 0;
+	</select>
+	
+	<insert id="setBookclub">
+		insert into bookclub values (default, #{vo.host}, #{vo.title}, #{vo.isbn}, #{vo.cover}, #{vo.author}, #{vo.engTitle}, #{vo.engAuthor}, default, default)
+	</insert>
+	
+	<insert id="setBookclubMember">
+		insert into bookclubMember values (default, #{idx}, #{mid}, default, default, default)
+	</insert>
+	
+	<insert id="setBookclubAsk">
+		insert into bookclubQ values (default, #{vo.clubIdx}, #{vo.clubMidx}, #{vo.mid}, #{vo.content}, #{vo.page}, #{vo.line}, #{vo.imgFile}, #{vo.language}, default, default, #{vo.top})
+	</insert>
+	
+	<insert id="setBookclubAnswer">
+		insert into bookclubA values (default, #{vo.clubIdx}, #{vo.qidx}, #{vo.clubMidx}, #{vo.clubToidx}, #{vo.mid}, #{vo.toMid}, #{vo.content}, #{vo.imgFile}, default, default)
+	</insert>
+	
+	<insert id="bookclubAHitLikePost">
+		insert into bookclubLike values (default, #{vo.aidx}, #{vo.clubMidx}, #{vo.clubToidx}, #{vo.mid}, #{vo.toMid}, default)
+	</insert>
+	
+	<insert id="setBookclubVoca">
+		insert into bookclubVoca values (default, #{vo.clubIdx}, #{vo.clubMidx}, #{vo.mid}, #{vo.word}, #{vo.transWord}, #{vo.language}, #{vo.wordGrade}, #{vo.pos}, #{vo.definition}, #{vo.transDfn}, default)
+	</insert>
+	
+	<insert id="setVocaBookMark">
+		insert into vocaBookMark values (default, #{vocaIdx}, #{clubMidx}, #{mid}, default)
+	</insert>
+	
+	<insert id="bookclubMarked">
+		insert into bookclubMarked values (default, #{idx}, #{clubMidx}, #{mid}, default)
+	</insert>
+	
+	<insert id="bookclubReport">
+		insert into bookclubReport values (default, #{vo.sort}, #{vo.sortIdx}, #{vo.offender}, #{vo.reporter}, #{vo.reason}, #{vo.detail}, default, default)
+	</insert>
+	
+	<update id="setBookclubNumber">
+		update bookclub set participant = participant+1 where idx = #{idx}
+	</update>
+	
+	<update id="updateBookclubQ">
+		update bookclubQ set page = #{vo.page}, line = #{vo.line}, content = #{vo.content}, imgFile = #{vo.imgFile} where idx = #{vo.idx}
+	</update>
+	
+	<update id="setBookclubAFeatured">
+		<if test="eIdx ==0 ">
+			update bookclubA set isFeatured = 1 where idx= #{idx};
+		</if>
+		<if test="eIdx !=0 ">
+			update bookclubA set isFeatured = 0 where idx= #{eIdx};
+			update bookclubA set isFeatured = 1 where idx= #{idx};
+		</if>
+	</update>
+	
+	<update id="clubHostChange">
+		update bookclub set host = #{mid} where idx = #{idx}
+	</update>
+	
+	<update id="clubMemberBan">
+		update bookclubMember set baned = 1 where clubIdx = #{idx} and mid = #{mid}
+	</update>
+	
+	<update id="clubMemberUnBan">
+		update bookclubMember set baned = 0 where clubIdx = #{idx} and mid = #{mid}
+	</update>
+	
+	<update id="clubMemberSub">
+		update bookclub set participant = participant-1 where idx = #{idx}
+	</update>
+	
+	<update id="clubpointUpdate">
+		update bookclubMember set clubPoint = clubPoint + #{amount} where idx = #{clubMidx}
+	</update>
+	
+	<update id="updateTop">
+		update bookclubQ set top = 'off' where top = 'on' and timestampdiff(day, qdate, now()) > 0
+	</update>
+	
+	<update id="updateReportedPost">
+		update bookclubReport set deleted = true where idx =#{idx}
+	</update>
+	
+	<delete id="bookclubLinkedAnswer">
+		delete from bookclubA where qidx = #{idx}
+	</delete>
+	
+	<delete id="bookclubQnADeletePost">
+		delete from bookclubQ where idx = #{idx};
+	</delete>
+	
+	<delete id="bookclubANoLike">
+		delete from bookclubLike where aidx = #{aidx} and mid = #{mid}
+	</delete>
+	
+	<delete id="bookclubMarkedNo">
+		delete from bookclubMarked where clubIdx = #{clubIdx} and mid = #{mid}
+	</delete>
+	
+	<delete id="bookclubAHitDelete">
+		delete from bookclubLike where aidx = #{aidx}
+	</delete>
+	
+	<delete id="bookclubADelete">
+		delete from bookclubA where idx = #{idx}
+	</delete>
+	
+	<delete id="deleteVocaBookMark">
+		delete from vocaBookMark where vocaIdx = #{vocaIdx} and mid = #{mid}
+	</delete>
+	
+	<delete id="linkedBookMark">
+		delete from vocaBookMark where vocaIdx = #{vocaIdx}
+	</delete>
+	
+	<delete id="vocaDelete">
+		delete from bookclubVoca where idx = #{idx} 
+	</delete>
+	
+	<delete id="bookclubUn">
+		delete from bookclubMember where clubIdx = #{idx} and mid = #{mid}
+	</delete>
+	
+	<delete id="bookclubDelete">
+		delete from bookclub where idx = #{idx}
+	</delete>
+	
+	
+	
+
+  
+</mapper>

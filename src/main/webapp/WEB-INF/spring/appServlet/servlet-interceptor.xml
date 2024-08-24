@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+	
+	
+	<beans:bean id="memberInterceptor" class="com.spring.javaclassS10.interceptor.MemberInterceptor"></beans:bean>
+	<beans:bean id="adminInterceptor" class="com.spring.javaclassS10.interceptor.AdminInterceptor"></beans:bean>
+	<beans:bean id="bookclubInterceptor" class="com.spring.javaclassS10.interceptor.BookclubInterceptor"></beans:bean>
+	<beans:bean id="meetupInterceptor" class="com.spring.javaclassS10.interceptor.MeetupInterceptor"></beans:bean>
+
+	
+	<interceptors>
+        <beans:bean class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor">
+            <beans:property name="paramName" value="lang"/>
+        </beans:bean>
+ 		
+    </interceptors>
+    
+    <interceptors>
+    	<interceptor>
+    		<mapping path="/member/**"/>
+    		<mapping path="/bookclub/**"/>
+    		<mapping path="/challenge/**"/>
+    		<mapping path="/meetup/**"/>
+    		<exclude-mapping path="/member/memberLogin"/>
+    		<exclude-mapping path="/member/memberJoin"/>
+    		<exclude-mapping path="/member/memberIdCheck"/>
+    		<exclude-mapping path="/member/memberPwdFind"/>
+    		<exclude-mapping path="/member/memberNewPassword"/>
+    		<exclude-mapping path="/member/memberGuest"/>
+    		<beans:ref bean = "memberInterceptor"/>
+    	</interceptor>
+    	
+    	<interceptor>
+    		<mapping path="/admin/**"/>
+    		<beans:ref bean = "adminInterceptor"/>
+    	</interceptor>
+    	
+    	<interceptor>
+    		<mapping path="/bookclub/bookclubQnA/**"/>
+    		<mapping path="/bookclub/bookclubAnswer/**"/>
+    		<mapping path="/bookclub/bookclubVocaByLang/**"/>
+    		<beans:ref bean = "bookclubInterceptor"/>
+    	</interceptor>
+    	
+    	<interceptor>
+    		<mapping path="/meetup/meetupRoom/**"/>
+
+    		<beans:ref bean = "meetupInterceptor"/>
+    	</interceptor>
+    </interceptors>
+
+</beans:beans>

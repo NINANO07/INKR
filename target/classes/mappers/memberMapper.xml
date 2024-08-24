@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.javaclassS10.dao.MemberDAO">
+
+	<select id="getMemberList" resultType="com.spring.javaclassS10.vo.MemberVO">
+		select * from member2 where isActive = true order by idx;
+	</select>
+
+	<select id="getAllMember" resultType="com.spring.javaclassS10.vo.MemberVO">
+		<if test="sort == ''">
+		select * from member2 <if test="search != ''">where mid like concat('%', #{search},'%') </if> order by idx desc limit #{startIndexNo}, #{pageSize} 
+		</if>
+		<if test="sort == 'idx'">
+		select * from member2 order by idx limit #{startIndexNo}, #{pageSize} 
+		</if>
+		<if test="sort == 'id'">
+		select * from member2 order by mid limit #{startIndexNo}, #{pageSize} 
+		</if>
+		<if test="sort == 'name'">
+		select * from member2 order by firstName limit #{startIndexNo}, #{pageSize} 
+		</if>
+		<if test="sort == 'region'">
+		select * from member2 order by region limit #{startIndexNo}, #{pageSize} 
+		</if>
+		<if test="sort == 'birthday'">
+		select * from member2 order by birthday limit #{startIndexNo}, #{pageSize} 
+		</if>
+		<if test="sort == 'date'">
+		select * from member2 order by signUpDate limit #{startIndexNo}, #{pageSize} 
+		</if>	
+	</select>
+
+	<select id="getIdCheck" resultType="com.spring.javaclassS10.vo.MemberVO">
+		select *, (select count(*) from bookclubReport where offender = #{mid} ) as reportCnt from member2 where mid = #{mid}
+	</select>
+	
+	<select id="getEmailCheck" resultType="com.spring.javaclassS10.vo.MemberVO">
+		select * from member2 where email = #{email}
+	</select>
+	
+	<select id="pointAmount" resultType="int">
+		select point from member2 where mid =#{mid}
+	</select>
+	
+	<select id="getLevel" resultType="int">
+		<if test="sort =='bookclub'">
+			select levelB from member2 where mid = #{mid}
+		</if>
+		<if test="sort =='challenge'">
+			select levelC from member2 where mid = #{mid}
+		</if>
+		<if test="sort =='meetup'">
+			select levelM from member2 where mid = #{mid}
+		</if>
+	</select>
+	
+	<select id="getMemberTotRecCnt" resultType="int">
+		<if test="search == '' ">
+			select count(*) from member2;
+		</if>
+		<if test="search != '' ">
+			select count(*) from member2 where mid like concat('%', #{search},'%')
+		</if>
+	</select>
+	
+	<select id="getInMessage"  resultType="com.spring.javaclassS10.vo.MessageVO">
+		select * from message where toMid =#{mid} order by idx desc
+	</select>
+	
+	<select id="getStMessage" resultType="com.spring.javaclassS10.vo.MessageVO">
+		select * from message where fromMid =#{mid} order by idx desc
+	</select>
+	
+	<insert id="setMemberJoin">
+		insert into member2 values (default, #{vo.mid}, #{vo.pwd}, #{vo.firstName}, #{vo.lastName}, #{vo.region}, #{vo.birthday}, #{vo.email}, #{vo.tel}, #{vo.photo},default, default, default, default, default, default, default, default, default)
+	</insert>
+	
+	<insert id="memberBlock">
+		insert into memberBlock values (default, #{mid}, #{toMid}, default);
+	</insert>
+	
+	<insert id="setMessage">
+		insert into message values(default, #{vo.toMid}, #{vo.fromMid}, #{vo.subject}, default)
+	</insert>
+	
+	
+	<update id="setUpdateVisitCnt">
+		update member2 set visitCnt = visitCnt+1, lastDate = now() where mid= #{mid}
+	</update>
+	
+	<update id="resetPassword">
+		update member2 set pwd = #{pwd} where mid = #{mid}
+	</update>
+  
+  	<update id="pointUpdate">
+  		<if test ="flag == 'use' ">
+	  		update member2 set point = point - #{amount} where mid = #{mid}
+  		</if>
+  		<if test ="flag != 'use' ">
+	  		update member2 set point = point + #{amount} where mid = #{mid}
+  		</if>
+  	</update>
+  	
+  	<update id="updateLevel">
+  		<if test="sort =='bookclub'">
+			update member2 set levelB = #{i} where mid=#{mid}
+		</if>
+		<if test="sort =='challenge'">
+			update member2 set levelC = #{i} where mid=#{mid}
+		</if>
+		<if test="sort =='meetup'">
+			update member2 set levelM = #{i} where mid=#{mid}
+		</if>
+  	</update>
+  	
+  	<update id="updateUserInfo">
+  		update member2 set firstName =#{vo.firstName}, lastName =#{vo.lastName}, region =#{vo.region}, birthday =#{vo.birthday}, email =#{vo.email}, tel =#{vo.tel} where idx =#{vo.idx}
+  	</update>
+  	
+  	<update id="changePhoto">
+  		update member2 set photo =#{vo.photo} where mid = #{vo.mid}
+  	</update>
+</mapper>

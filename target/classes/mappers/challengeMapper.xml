@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.javaclassS10.dao.ChallengeDAO">
+
+	<select id="getChallengeList" resultType="com.spring.javaclassS10.vo.ChallengeListVO">
+		select * from challengeList order by postCnt desc;
+	</select>
+	
+	<select id="getChallenge" resultType="com.spring.javaclassS10.vo.ChallengeVO">
+		select c.*, l.title, m.photo as memPhoto, (select count(*) from challengeLike where chIdx= c.Idx and mid=#{mid}) as hitHeart from challenge c join challengeList l on c.listIdx = l.idx join member2 m on c.mid = m.mid order by c.idx desc;
+	</select>	
+	
+	<select id="getChallengeSearch" resultType="com.spring.javaclassS10.vo.ChallengeVO">
+	    SELECT c.*, l.title, m.photo AS memPhoto , (select count(*) from challengeLike where chIdx= c.Idx and mid=#{mid}) as hitHeart, likeCnt
+	    FROM challenge c
+	    JOIN challengeList l ON c.listIdx = l.idx
+	    JOIN member2 m ON c.mid = m.mid
+	    LEFT JOIN (
+	    SELECT 
+	        chIdx, 
+	        COUNT(*) AS likeCnt
+	    FROM 
+	        challengeLike
+	    GROUP BY 
+	        chIdx
+		) AS likeCounts ON c.Idx = likeCounts.chIdx
+	    <where>
+	        <if test="tag != null and tag.length > 0">
+	            <foreach collection="tag" item="t2" open="(" separator=" OR " close=")">
+	                FIND_IN_SET(#{t2}, c.tag) > 0
+	            </foreach>
+	        </if>
+	
+	        <if test="searchStr != null and searchStr != ''">
+	            <if test="tag != null and tag.length > 0">
+	                AND
+	            </if>
+	            l.title LIKE CONCAT('%', #{searchStr}, '%')
+	        </if>
+	    </where>
+	    <choose>
+	        <when test="sort == 'popular'">
+	            ORDER BY likeCnt DESC
+	        </when>
+	        <otherwise>
+	            ORDER BY c.idx DESC
+	        </otherwise>
+	    </choose>
+	</select>
+	
+	<select id="challengeBy" resultType="com.spring.javaclassS10.vo.ChallengeVO">
+		<if test="flag == 'title'">
+		select c.*, l.title, m.photo as memPhoto, (select count(*) from challengeLike where chIdx= c.Idx and mid=#{mid}) as hitHeart from challenge c join challengeList l on c.listIdx = l.idx join member2 m on c.mid = m.mid 
+		where l.title = #{txt} order by c.idx desc;
+		</if>
+		<if test="flag == 'tag'">
+		select c.*, l.title, m.photo as memPhoto, (select count(*) from challengeLike where chIdx= c.Idx and mid=#{mid}) as hitHeart from challenge c join challengeList l on c.listIdx = l.idx join member2 m on c.mid = m.mid 
+		where c.tag like concat ('%',#{txt},'%') order by c.idx desc;
+		</if>
+		<if test="flag == 'heart'">
+		select c.*, l.title, m.photo as memPhoto, (select count(*) from challengeLike where chIdx= c.Idx and mid=#{mid}) as hitHeart from challenge c join challengeList l on c.listIdx = l.idx join member2 m on c.mid = m.mid 
+		where c.idx in (select chIdx from challengeLike where mid =#{txt}) order by c.idx desc;
+		</if>
+		<if test="flag == 'pic'">
+		select c.*, l.title, m.photo as memPhoto, (select count(*) from challengeLike where chIdx= c.Idx and mid=#{mid}) as hitHeart from challenge c join challengeList l on c.listIdx = l.idx join member2 m on c.mid = m.mid 
+		where c.mid = #{txt} order by c.idx desc
+		</if>
+	</select>
+	
+	<select id="getMemberDetail" resultType="com.spring.javaclassS10.vo.ChallengeLikeVO">
+		select (select count(*) from challengeLike where toMid =#{mid}) as likedCnt, 
+		(select count(*) from challenge where mid=#{mid})as postedCnt, (select point from challengePoint where mid=#{mid}) as point
+	</select>
+	
+	<select id="getChallengePoint" resultType="int">
+		select count(*) from challengePoint where mid = #{mid}
+	</select>
+	
+	<select id="getPoint" resultType="int">
+		select point from challengePoint where mid =#{mid};
+	</select>
+	
+	<select id="challengeGetLike" resultType="com.spring.javaclassS10.vo.ChallengeVO">
+		select c.*, l.title, m.photo as memPhoto from challenge c join challengeList l on c.listIdx = l.idx join member2 m on c.mid = m.mid where c.idx =#{idx}
+	</select>
+	<insert id="setChallenge">
+		insert into challenge values (default, #{vo.listIdx}, #{vo.mid}, #{vo.photo}, #{vo.tag}, default)
+	</insert>
+	<insert id="setChallengeList">
+		insert into challengeList values (default, #{title}, #{mid}, default, default)
+	</insert>
+	
+	<insert id="challegeHitLike">
+		insert into challengeLike values (default, #{vo.chIdx}, #{vo.mid}, #{vo.toMid}, default)
+	</insert>
+	
+	<insert id="setChallengePoint">
+		insert into challengePoint values(default, #{mid}, default, default)
+	</insert>
+	
+	<update id="updateChallengePoint">
+		update challengePoint set point = point + #{i} where mid =#{mid}
+	</update>
+	
+	<update id="updateChallengeCnt">
+		update challengeList set postCnt = postCnt + 1 where idx =#{listIdx}
+	</update>
+	
+	<delete id="challegeNoLike">
+		delete from challengeLike where chIdx =#{vo.chIdx} and mid= #{vo.mid}
+	</delete>
+	
+	<delete id="deletePost">
+		delete from challenge where idx = #{idx}
+	</delete>
+	
+</mapper>
